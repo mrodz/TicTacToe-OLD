@@ -268,7 +268,7 @@ abstract class Participant {
      * will play an entire game, while this is a single turn.
      * @see Game#play(Participant, Participant)
      */
-    abstract void go();
+    protected abstract void go();
 }
 
 /**
@@ -279,6 +279,7 @@ abstract class Participant {
  * </p>
  */
 class Player extends Participant {
+    /**Used to read human input from the {@link System#in}*/
     private static final java.util.Scanner scanner = new java.util.Scanner(System.in).useLocale(java.util.Locale.US);
 
     Player(Grid g) {
@@ -392,7 +393,7 @@ abstract class AI extends Participant {
      * @param input is an int array that contains an x and a y value.
      * @param symbol is the symbol that will be placed at said coordinates.
      */
-    void plotGrid(int[] input, char symbol) {
+    protected void plotGrid(int[] input, char symbol) {
         grid.plot(input, symbol);
     }
 
@@ -401,7 +402,7 @@ abstract class AI extends Participant {
      * @return a formatted message containing the bot difficulty
      */
     @Deprecated
-    String getPlacementMessage() {
+    protected String getPlacementMessage() {
         return String.format("%n%nMaking move level \"%s\"%n%n", this.difficulty.name());
     }
 
@@ -413,7 +414,7 @@ abstract class AI extends Participant {
      * @throws IllegalArgumentException when there are not exactly <b>two</b> coordinates present.
      */
     @Deprecated
-    String getPlacementMessage(int... coords) throws IllegalArgumentException {
+    protected String getPlacementMessage(int... coords) throws IllegalArgumentException {
         if (coords.length != 2) throw new IllegalArgumentException("You entered too many coordinates!");
         return String.format("%n%nMaking move level \"%s\" at %d, %d%n%n", this.difficulty.name(), coords[0], coords[1]);
     }
@@ -426,7 +427,7 @@ abstract class AI extends Participant {
      * @return a formatted String containing the bot difficulty, the coordinates the move was plotted
      * at, and bonus information.
      */
-    String getPlacementMessage(String moveInfo, int... coords) throws IllegalArgumentException {
+    protected String getPlacementMessage(String moveInfo, int... coords) throws IllegalArgumentException {
         if (coords.length != 2) throw new IllegalArgumentException(String.
                 format("You entered the wrong amount of coordinates! (Should be 2, you entered %d)", coords.length));
         return String.format("%n%n%s >> Making move level \"%s\" at %d, %d (%s)%n", this.type.getName(),
@@ -447,7 +448,7 @@ abstract class AI extends Participant {
      * @see Participant#go()
      */
     @Override
-    abstract void go();
+    protected abstract void go();
 
     /**
      * Will analyze the global {@link Participant#grid} and choose where would be the best move.
@@ -455,7 +456,7 @@ abstract class AI extends Participant {
      * @return an int[] array containing successful coordinates to be used in {@link #plotGrid(int[], char)}.
      */
     @SuppressWarnings("unused")
-    abstract int[] assessGrid();
+    protected abstract int[] assessGrid();
 }
 
 /**
@@ -482,7 +483,7 @@ class EasyAI extends AI {
      * @see AI#assessGrid()
      */
     @Override
-    public int[] assessGrid() {
+    protected int[] assessGrid() {
         java.util.Random random = new java.util.Random();
         char[][] tg = grid.toCharArray();
         while (true) {
@@ -494,13 +495,12 @@ class EasyAI extends AI {
     }
 
     @Override
-    void go() {
+    protected void go() {
         int[] i = assessGrid();
         System.out.println(getPlacementMessage("Random Moves", i));
         plotGrid(i, this.symbol);
     }
 }
-
 
 /**
  * <p>
@@ -516,17 +516,16 @@ class EasyAI extends AI {
  * </p>
  * @see AI
  */
-
 class MediumAI extends AI {
 
     static class Move {
         private final Urgency urgency;
 
-        public Move(Urgency urgency) {
+        private Move(Urgency urgency) {
             this.urgency = urgency;
         }
 
-        public int getWeight() {
+        private int getWeight() {
             return urgency.weight;
         }
     }
@@ -557,29 +556,17 @@ class MediumAI extends AI {
             int[] blanks = {0, 0};
             for (int b = 0; b < tg[i].length; b++) {
                 switch (tg[i][b]) {
-                    case 'X':
-                        values[0][0]++;
-                        break;
-                    case 'O':
-                        values[0][1]++;
-                        break;
-                    case '_':
-                        blanks[0]++;
-                        break;
+                    case 'X': values[0][0]++; break;
+                    case 'O': values[0][1]++; break;
+                    case '_': blanks[0]++; break;
                     default:
                         throw new IllegalStateException(String.format("The character at grid index %d, %d is invalid! " +
                                 "(Found '%c', should be either 'X', 'O', or '_')", i, b, tg[i][b]));
                 }
                 switch (tg[b][i]) {
-                    case 'X':
-                        values[1][0]++;
-                        break;
-                    case 'O':
-                        values[1][1]++;
-                        break;
-                    case '_':
-                        blanks[1]++;
-                        break;
+                    case 'X': values[1][0]++; break;
+                    case 'O': values[1][1]++; break;
+                    case '_': blanks[1]++; break;
                     default:
                         throw new IllegalStateException(String.format("The character at grid index %d, %d is invalid! " +
                                 "(Found '%c', should be either 'X', 'O', or '_')", b, i, tg[b][i]));
@@ -609,30 +596,18 @@ class MediumAI extends AI {
             int[] blanks = {0, 0};
             for (int b = 0, c = tg[b].length - 1; b < tg.length && c >= 0; b++, c--) {
                 switch (tg[b][b]) {
-                    case 'X':
-                        values[0][0]++;
-                        break;
-                    case 'O':
-                        values[0][1]++;
-                        break;
-                    case '_':
-                        blanks[0]++;
-                        break;
+                    case 'X': values[0][0]++; break;
+                    case 'O': values[0][1]++; break;
+                    case '_': blanks[0]++; break;
                     default:
                         throw new IllegalStateException(String.format("The character at grid index %d, %d is invalid! " +
                                 "(Found '%c', should be either 'X', 'O', or '_')", b, b, tg[b][b]));
                 }
 
                 switch (tg[c][b]) {
-                    case 'X':
-                        values[1][0]++;
-                        break;
-                    case 'O':
-                        values[1][1]++;
-                        break;
-                    case '_':
-                        blanks[1]++;
-                        break;
+                    case 'X': values[1][0]++; break;
+                    case 'O': values[1][1]++; break;
+                    case '_': blanks[1]++; break;
                     default:
                         throw new IllegalStateException(String.format("The character at grid index %d, %d is invalid! " +
                                 "(Found '%c', should be either 'X', 'O', or '_')", c, b, tg[c][b]));
@@ -655,7 +630,7 @@ class MediumAI extends AI {
      * @see AI#assessGrid()
      */
     @Override
-    int[] assessGrid() {
+    protected int[] assessGrid() {
         char[][] tg = this.getGrid().toCharArray();
         readGrid();
 
@@ -724,7 +699,7 @@ class MediumAI extends AI {
     }
 
     @Override
-    void go() {
+    protected void go() {
         int[] i = assessGrid();
         System.out.println(getPlacementMessage("Medium Difficulty", i));
         plotGrid(i, this.symbol);
@@ -739,19 +714,19 @@ class MediumAI extends AI {
  * @see AI
  */
 class HardAI extends AI {
-    public HardAI() {
+    HardAI() {
         super();
         super.type = Implementation.BOT_HARD;
         super.difficulty = Difficulty.HARD;
     }
 
     @Override
-    int[] assessGrid() {
+    protected int[] assessGrid() {
         return new MinimaxEngine(grid, this.symbol).simulate();
     }
 
     @Override
-    void go() {
+    protected void go() {
         int[] i = assessGrid();
         System.out.println(getPlacementMessage("Hard Difficulty", i));
         System.out.println();
@@ -789,18 +764,15 @@ class Game {
         player1.setSymbol('X');
         player2.setSymbol('O');
         while (true) {
-            player1.go();
-            player1.getGrid().print();
-            if (!player1.getGrid().checkStatus().contains("Game not finished!")) {
-                break;
-            }
-            player2.go();
-            player2.getGrid().print();
-            if (!player2.getGrid().checkStatus().contains("Game not finished!")) {
-                break;
+            for (int i = 0; i < 2; i++) {
+                (i == 0 ? player1 : player2).go();
+                (i == 0 ? player1 : player2).getGrid().print();
+                if (!(i == 0 ? player1 : player2).getGrid().checkStatus().contains("Game not finished!")) {
+                    System.out.printf("%n%n%s%n%n\t\t\t\t\t\t%s%n%n", GAME_OVER, player1.getGrid().checkStatus());
+                    return;
+                }
             }
         }
-        System.out.printf("%n%n%s%n%n\t\t\t\t\t\t%s%n%n", GAME_OVER, player1.getGrid().checkStatus());
     }
 }
 
@@ -808,10 +780,10 @@ class Grid {
     private final char[][] grid;
     int xS, oS, blanks;
 
-    public Grid(String input) {
+    protected Grid(String input) {
         this.grid = stringToGrid(input);
     }
-    public Grid() {
+    protected Grid() {
         this.grid = stringToGrid("_________");
     }
 
@@ -822,7 +794,7 @@ class Grid {
      * @param c is the character symbol to be placed.
      */
     @Deprecated
-    void updateGrid(int x, int y, char c) {
+    protected void updateGrid(int x, int y, char c) {
         this.grid[x][y] = c;
     }
 
@@ -836,15 +808,9 @@ class Grid {
         for (char[] a : this.grid) {
             for (char c : a) {
                 switch (c) {
-                    case 'X':
-                        xS++;
-                        break;
-                    case 'O':
-                        oS++;
-                        break;
-                    case '_':
-                        blanks++;
-                        break;
+                    case 'X': xS++; break;
+                    case 'O': oS++; break;
+                    case '_': blanks++; break;
                 }
             }
         }
@@ -854,10 +820,11 @@ class Grid {
      * <b>Plots a character at the specified coordinates.</b>
      */
     @SuppressWarnings("SameParameterValue")
-    public void plot(int[] coords, char symbol) {
+    protected void plot(int[] coords, char symbol) {
         if (coords.length != 2) {
             throw new IllegalArgumentException("You can only enter two coordinates!");
         }
+
         if (coords[0] < 1 || coords[0] > 3 || coords[1] < 1 || coords[1] > 3/*!(coords[0] >= 1 && coords[0] <= 3 && coords[1] >= 1 && coords[1] <= 3)*/) {
             throw new IllegalArgumentException("The value of the coordinates must fit within the range of 1-3\n" +
                     String.format("Your input: %d, %d", coords[0], coords[1]));
@@ -881,7 +848,7 @@ class Grid {
      *     <li>Game not finished!</li>
      * </ul>
      */
-    public String checkStatus() {
+    protected String checkStatus() {
         for (int i = 0; i < 3; i++) {
             if (grid[i][0] == grid[i][1] && grid[i][1] == grid[i][2] && grid[i][1] != '_') {
                 return String.format("%c wins", grid[i][1]);
@@ -903,7 +870,7 @@ class Grid {
      * Calculate whether the game has concluded.
      * @return whether the game is over (ie. has a definite winner).
      */
-    public boolean isGameOver() {
+    protected boolean isGameOver() {
         char[][] tg = grid;
 
         //Straights
@@ -930,11 +897,10 @@ class Grid {
      * @return a char[][] array that contains the elements of the string.
      * @throws IllegalArgumentException if the string is <b>not</b> 9 characters long.
      */
-    private char[][] stringToGrid(String str) throws IllegalArgumentException {
+    private char[][] stringToGrid(String str) throws AssertionError {
+        assert str.length() == 9 : "This string must be 9 characters long!";
         char[][] res = new char[3][3];
-        if (str.length() != 9) {
-            throw new IllegalArgumentException("This string must be 9 characters long!");
-        }
+
         for (int i = 0, c = 0; i < 3; i++) {
             for (int b = 0; b < 3; b++, c++) {
                 res[i][b] = str.charAt(c);
@@ -966,7 +932,7 @@ class Grid {
      * </pre>
      * @implNote Used frequently
      */
-    public void print() {
+    protected void print() {
         System.out.println("---------");
         for (char[] a : this.grid) {
             System.out.print("| ");
@@ -976,14 +942,14 @@ class Grid {
         System.out.print("---------");
     }
 
-    public static Grid copyOf(Grid grid) {
+    protected static Grid copyOf(Grid grid) {
         char[][] cg = grid.toCharArray();
         StringBuilder s = new StringBuilder();
         for (char[] cL : cg) for (char c : cL) s.append(c);
         return new Grid(s.toString());
     }
 
-    public char[][] toCharArray() {
+    protected char[][] toCharArray() {
         char[][] destination = new char[this.grid.length][this.grid[0].length];
         for (int i = 0; i < destination.length; i++) {
             System.arraycopy(this.grid[i], 0, destination[i], 0, destination[i].length);
@@ -1018,23 +984,23 @@ enum Implementation {
 
 class MinimaxEngine {
     /**This is the base grid, ie. the current state of the game <u>before</u> the algorithm is run.*/
-    Grid baseGrid;
+    private final Grid BASE_GRID;
 
     /**The AI's symbol -> The player to be maximized.*/
-    char symbol;
+    private final char SYMBOL;
 
     /**The opponent's symbol -> The player to be minimized.*/
-    char oppSymbol;
+    private final char OPP_SYMBOL;
 
     /**
-     * <b>Constructor to initialize {@link #baseGrid} & {@link #symbol}</b>
+     * <b>Constructor to initialize {@link #BASE_GRID} & {@link #SYMBOL}</b>
      * @param grid valid {@link Grid} to serve as the base for calculations.
      * @param symbol the <u>maximizing</u> symbol.
      */
-    public MinimaxEngine(Grid grid, char symbol) {
-        baseGrid = Grid.copyOf(grid);
-        this.symbol = symbol;
-        this.oppSymbol = this.symbol == 'X' ? 'O' : 'X';
+    protected MinimaxEngine(Grid grid, char symbol) {
+        BASE_GRID = Grid.copyOf(grid);
+        this.SYMBOL = symbol;
+        this.OPP_SYMBOL = this.SYMBOL == 'X' ? 'O' : 'X';
     }
 
     /**
@@ -1043,18 +1009,18 @@ class MinimaxEngine {
      * </p>
      * <p>
      *     Using the MiniMax algorithm, this engine will work out the best move from the
-     *     board stored as {@link #baseGrid}
+     *     board stored as {@link #BASE_GRID}
      * </p>
      * @return an {@code int[]} with a length of 2, containing the proper X and Y values of the best plot.
      */
-    public int[] simulate() {
+    protected int[] simulate() {
         int bestScore = Integer.MIN_VALUE;
         int[] move = new int[2];
-        char[][] board = baseGrid.toCharArray();
+        char[][] board = BASE_GRID.toCharArray();
         for (int i = 0, c = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++, c++) {
                 if (board[i][j] == '_') {
-                    int score = minimax(new Grid(stringWithCharAt(baseGrid.toString(), c, this.symbol)), false);
+                    int score = minimax(new Grid(stringWithCharAt(BASE_GRID.toString(), c, this.SYMBOL)), false);
                     if (score > bestScore) {
                         bestScore = score;
                         move = new int[] {i + 1, j + 1};
@@ -1085,13 +1051,13 @@ class MinimaxEngine {
         int bestScore;
         if (isMaximizing) {
             bestScore = Integer.MIN_VALUE;
-            for (Grid g : getPositionsFrom(position, this.symbol)) {
+            for (Grid g : getPositionsFrom(position, this.SYMBOL)) {
                 int score = minimax(g, false);
                 bestScore = Math.max(score, bestScore);
             }
         } else {
             bestScore = Integer.MAX_VALUE;
-            for (Grid g : getPositionsFrom(position, this.oppSymbol)) {
+            for (Grid g : getPositionsFrom(position, this.OPP_SYMBOL)) {
                 int score = minimax(g, true);
                 bestScore = Math.min(score, bestScore);
             }
@@ -1141,9 +1107,9 @@ class MinimaxEngine {
      */
     private int analyzePosition(Grid position) throws AssertionError {
         assert position.isGameOver() : "This method checks for the end result of a board; the supplied grid is still being played!";
-        if (isWin(position, this.symbol)) return Scores.WIN.value;
-        if (isWin(position, this.oppSymbol)) return Scores.LOSS.value;
-        return Scores.TIE.value;
+        if (isWin(position, this.SYMBOL)) return Scores.WIN.getValue();
+        if (isWin(position, this.OPP_SYMBOL)) return Scores.LOSS.getValue();
+        return Scores.TIE.getValue();
     }
 
     /**
@@ -1179,10 +1145,14 @@ enum Scores {
     TIE(0);
 
     /**Weight*/
-    int value;
+    private final int value;
 
     Scores(int value) {
         this.value = value;
+    }
+
+    protected int getValue() {
+        return this.value;
     }
 }
 
